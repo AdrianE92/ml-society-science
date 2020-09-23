@@ -7,10 +7,10 @@ features = ['checking account balance', 'duration', 'credit history',
             'property', 'age', 'other installments', 'housing', 'credits',
             'job', 'persons', 'phone', 'foreign']
 target = 'repaid'
+
 #df = pandas.read_csv('../../data/credit/german.data', sep=' ', names=features+[target])
 #df = pandas.read_csv('../../data/credit/D_valid.csv', sep=' ', names=features+[target])
 #df = pa
-df = pandas.read_csv('temperature.csv')
 
 import matplotlib.pyplot as plt
 numerical_features = ['duration', 'age', 'residence time', 'installment', 'amount', 'persons', 'credits']

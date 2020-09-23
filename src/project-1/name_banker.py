@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.naive_bayes import MultinomialNB
 
 class RandomBanker:
     
@@ -9,7 +10,11 @@ class RandomBanker:
         """using navie bayes
         """
         self.data = [X, y]
-        
+        clf = MultinomialNB()
+        clf.fit(X,y)
+        self.clf = clf
+        return clf
+
 
 
     # set the interest rate
@@ -17,13 +22,11 @@ class RandomBanker:
         self.rate = rate
         return
 
-    def get_proba(self, action):
-        self.action = action
-        return action
-
     # Predict the probability of failure for a specific person with data x
     def predict_proba(self, x):
-        return 0
+        x = [x]
+        predict = self.clf.predict_proba(x)
+        return predict
 
     # THe expected utility of granting the loan or not. Here there are two actions:
     # action = 0 do not grant the loan
@@ -32,15 +35,27 @@ class RandomBanker:
     # Make sure that you extract the length_of_loan from the
     # 2nd attribute of x. Then the return if the loan is paid off to you is amount_of_loan*(1 + rate)^length_of_loan
     # The return if the loan is not paid off is -amount_of_loan.
-    def expected_utility(self, x, action):
+    def expected_utility(self, x):
         """x[1] is length of loan and x[4] is amount of loan
         """
-        if get_proba(self, action) == 0:
-            return 0 
-        if get_proba(self, action) == 1:
-            return x[4] * (1 + self.rate)**x[1]
+        predict = self.predict_proba(x)
+        # if predict < 0.5: 
+        #     predict = 0
+        # else:
+        #     predict =  1
+
+        # if predict == 0:
+        #     return 0 
+        # if predict == 1:
+        #     return x[4] * (1 + self.rate)**x[1]
+
+        return predict * x[4] * (1 + self.rate)**x[1] - (1 - predict)*x[4]
 
     # Return the best action. This is normally the one that maximises expected utility.
     # However, you are allowed to deviate from this if you can justify the reason.
     def get_best_action(self, x):
-        return np.random.choice(2,1)[0]
+        
+        if self.expected_utility(x) > 0:
+            return 1
+        else: 
+            return 0
