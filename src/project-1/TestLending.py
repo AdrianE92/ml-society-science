@@ -1,5 +1,13 @@
 import pandas
 
+#Helper function to map the values of repaid
+def mapping(x):
+    if x == 2:
+        x = 0
+    else:
+        x = 1
+    return x
+
 ## Set up for dataset
 features = ['checking account balance', 'duration', 'credit history',
             'purpose', 'amount', 'savings', 'employment', 'installment',
@@ -8,9 +16,12 @@ features = ['checking account balance', 'duration', 'credit history',
             'job', 'persons', 'phone', 'foreign']
 target = 'repaid'
 
+df = pandas.read_csv('./data/credit/german.data', sep=' ',
+                     names=features+[target])
+df['repaid'] = df['repaid'].map(mapping)
+
 #df = pandas.read_csv('../../data/credit/german.data', sep=' ', names=features+[target])
 #df = pandas.read_csv('../../data/credit/D_valid.csv', sep=' ', names=features+[target])
-#df = pa
 
 import matplotlib.pyplot as plt
 numerical_features = ['duration', 'age', 'residence time', 'installment', 'amount', 'persons', 'credits']
@@ -47,12 +58,14 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker):
 
 
 ### Setup model
-import random_banker # this is a random banker
-decision_maker = random_banker.RandomBanker()
+import name_banker  #this is a random banker
+import random_banker
+decision_maker = name_banker.NameBanker()
+#decision_maker = random_banker.RandomBanker()
 #import aleksaw_banker
 #decision_maker = aleksaw_banker.AlexBanker()
 
-interest_rate = 0.017
+interest_rate = 0.05
 
 ### Do a number of preliminary tests by splitting the data in parts
 from sklearn.model_selection import train_test_split
