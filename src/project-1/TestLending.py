@@ -15,13 +15,13 @@ features = ['checking account balance', 'duration', 'credit history',
             'property', 'age', 'other installments', 'housing', 'credits',
             'job', 'persons', 'phone', 'foreign']
 target = 'repaid'
+
 df = pandas.read_csv('./data/credit/german.data', sep=' ',
                      names=features+[target])
 df['repaid'] = df['repaid'].map(mapping)
 
-#df = pandas.read_csv('D_valid.csv', sep=' ',
-#                    names=features+[target])
-#df = pa
+#df = pandas.read_csv('../../data/credit/german.data', sep=' ', names=features+[target])
+#df = pandas.read_csv('../../data/credit/D_valid.csv', sep=' ', names=features+[target])
 
 import matplotlib.pyplot as plt
 numerical_features = ['duration', 'age', 'residence time', 'installment', 'amount', 'persons', 'credits']

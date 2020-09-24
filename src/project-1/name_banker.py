@@ -1,7 +1,9 @@
 import numpy as np
 from sklearn.naive_bayes import MultinomialNB
+
 np.seterr(all='ignore')
 class NameBanker:
+
     
     # Fit the model to the data.  You can use any model you like to do
     # the fit, however you should be able to predict all class
@@ -11,8 +13,7 @@ class NameBanker:
         self.clf = MultinomialNB()
         self.clf.fit(X, y)
         return self.clf
-        
-
+       
     # set the interest rate
     def set_interest_rate(self, rate):
         self.rate = rate
@@ -32,7 +33,7 @@ class NameBanker:
     # Make sure that you extract the length_of_loan from the
     # 2nd attribute of x. Then the return if the loan is paid off to you is amount_of_loan*(1 + rate)^length_of_loan
     # The return if the loan is not paid off is -amount_of_loan.
-    
+
     def expected_utility(self, x):
         predict = self.predict_proba(x)
         return predict * x[4] * (np.power(1 + self.rate, x[1]) - 1) - (1 - predict)*x[4]
