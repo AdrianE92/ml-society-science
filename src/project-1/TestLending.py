@@ -16,7 +16,7 @@ features = ['checking account balance', 'duration', 'credit history',
             'job', 'persons', 'phone', 'foreign']
 target = 'repaid'
 
-df = pandas.read_csv('./data/credit/german.data', sep=' ',
+df = pandas.read_csv('../../data/credit/german.data', sep=' ',
                      names=features+[target])
 df['repaid'] = df['repaid'].map(mapping)
 
@@ -58,9 +58,9 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker):
 
 
 ### Setup model
-import name_banker  #this is a random banker
+import anadma_banker  #this is a random banker
 import random_banker
-decision_maker = name_banker.NameBanker()
+decision_maker = anadma_banker.AnadmaBanker()
 #decision_maker = random_banker.RandomBanker()
 #import aleksaw_banker
 #decision_maker = aleksaw_banker.AlexBanker()

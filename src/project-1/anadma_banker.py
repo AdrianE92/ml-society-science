@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.naive_bayes import MultinomialNB
 
 np.seterr(all='ignore')
-class NameBanker:
+class AnadmaBanker:
 
     
     # Fit the model to the data.  You can use any model you like to do
