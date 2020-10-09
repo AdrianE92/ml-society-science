@@ -40,28 +40,6 @@ def qua_noise(X):
     X[quantitative_features_2] = (X[quantitative_features_2] + w) % 2
     return X
 
-def add_noise(X, numerical_features, categorical_features):
-    #coinflip for categorical variables
-    epsilon = 0.1
-    k = np.shape(X)[1]
-
-    flip_fraction = 1/ (1  + np.exp(epsilon/k))
-
-    X_noise = X.copy()
-    for t in list(X_noise.index):
-         for c in X_noise.columns:
-            # We can use the same random response mechanism for all binary features
-            if any(c.startswith(i) for i in categorical_features):
-                w = np.random.choice([0, 1], p=[1 - flip_fraction, flip_fraction])
-                X_noise.loc[t,c] = (X_noise.loc[t,c] + w) % 2
-            # For numerical features, it is different. The scaling factor should depend on k, \epsilon, and the sensitivity of that particular attribite. In this case, it's simply the range of the attribute.
-            if any(c.startswith(i) for i in numerical_features):
-                # calculate the range of the attribute and add the laplace noise to the original data
-                M = np.max(X.loc[:,c]) - np.min(X.loc[:,c])
-                l = M*k/(epsilon)
-                w = np.random.laplace(0, l)   
-                X_noise.loc[t,c] += w 
-    return X_noise   
 #Create noise using differential privacy through laplace
 #We implement a coin-toss to randomize what data becomes noisy.
 def laplace_func(X):
@@ -70,7 +48,6 @@ def laplace_func(X):
     n = np.shape(X)[1]
     for i in numerical_features:
         if np.random.random() > 0.5:
- 
             M = (X[i].max()-X[i].min())
             l = (M*epsilon)/n
             w = np.random.laplace(0, l)    
