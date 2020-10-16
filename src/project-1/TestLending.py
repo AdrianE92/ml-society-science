@@ -107,7 +107,7 @@ def women(data):
 women(df)
 
 ## Test function ##
-def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not_loan, woman_loan):
+def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not_loan, woman_loan, man_not_loan, man_loan):
     n_test_examples = len(X_test)
     utility = 0
 
@@ -123,26 +123,32 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not
         amount = X_test['amount'].iloc[t]
         # If we don't grant the loan then nothing happens
 
-        """    A92: Female divorced/separated/married
+        """    
+        A91: Male ivorced/separated, no one
+        A92: Female divorced/separated/married
         A93: Male married/widowed
         A94: Male Single
-        A95: female single
-        'marital status_AXX'
+        A95: female single, no one
         """
         if (action==1):
             if (good_loan != 1):
                 utility -= amount
-                #X_test['marital status_A95'].iloc[t] == 1
+
                 if (X_test['marital status_A92'].iloc[t] == 1):
                     woman_not_loan += 1
+                if (X_test['marital status_A93'].iloc[t] == 1 or X_test['marital status_A94'].iloc[t] == 1):
+                    man_not_loan += 1
             else:    
                 utility += amount*(pow(1 + interest_rate, duration) - 1)
                 if (X_test['marital status_A92'].iloc[t] == 1):
                     woman_loan += 1
+                if (X_test['marital status_A93'].iloc[t] == 1 or X_test['marital status_A94'].iloc[t] == 1):
+                    man_loan += 1
+
         total_utility += utility
         total_amount += amount
 
-    return utility, total_utility/total_amount, woman_not_loan, woman_loan
+    return utility, total_utility/total_amount, woman_not_loan, woman_loan, man_not_loan, man_loan
 
 
 ## Main code
@@ -163,6 +169,8 @@ for i in range(1):
     investment_return = 0
     woman_loan = 0
     woman_not_loan = 0
+    man_loan = 0
+    man_not_loan = 0
     for iter in range(n_tests):
         X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
         X_train_noise, X_test_noise = add_noise(X_train, X_test)
@@ -170,13 +178,19 @@ for i in range(1):
         
         decision_maker.set_interest_rate(interest_rate)
         decision_maker.fit(X_train, y_train)
-        Ui, Ri, woman_not_loan, woman_loan = test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not_loan, woman_loan)
+        Ui, Ri, woman_not_loan, woman_loan, man_not_loan, man_loan = test_decision_maker(X_test, y_test, interest_rate, 
+                                                                 decision_maker, woman_not_loan, 
+                                                                 woman_loan, man_not_loan, man_loan)
         utility += Ui
         investment_return += Ri
     if (woman_not_loan + woman_loan != 0):
-        print("gave loan to woman: ", woman_loan/n_tests)
-        print("did not give loan to woman: ", woman_not_loan/n_tests)
-        print("persentage giving loan to women: ", woman_loan / (woman_loan + woman_not_loan))
+        print("gave loan to number of woman: ", woman_loan/n_tests)
+        print("did not give loan to number of woman: ", woman_not_loan/n_tests)
+        print("percentage giving loan to women: ", woman_loan / (woman_loan + woman_not_loan))
+    if (man_not_loan + man_loan != 0):
+        print("gave loan to number of men: ", man_loan/n_tests)
+        print("did not give loan to number of men: ", man_not_loan/n_tests)
+        print("percentage giving loan to men: ", man_loan / (man_loan + man_not_loan))
     print("Average utility:", utility / n_tests)
     print("Average return on investment:", investment_return / n_tests)
 
