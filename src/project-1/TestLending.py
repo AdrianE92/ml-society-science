@@ -64,8 +64,50 @@ def add_noise(X_train, X_test):
     return X_train_noise, X_test_noise
 
 
+def foreign(data):
+    """
+    """
+    counter = 0
+    paid_back = 0
+    for i in range(data.shape[0]):
+        if data.iloc[i]['foreign'] == 'A202':
+            counter += 1
+            if data.iloc[i]['repaid'] == 1:
+                paid_back += 1
+    print("Number of foreign in dataset: ", counter)
+    print("Number of those who paid back: ", paid_back)
+    print("prosentage: ", paid_back/counter)
+    print("total: ", 700/1000)
+
+
+#foreign(df)
+
+
+def women(data):
+    """se hvor mange kvinner og men funksjonen vår faktisk gir lån til
+    A92: Female divorced/separated/married
+    A93: Male married/widowed
+    A94: Male Single
+    A95: female single
+    'marital status_AXX'
+    """
+    counter = 0
+    paid_back = 0
+    for i in range(data.shape[0]):
+        if data.iloc[i]['marital status'] == 'A92' or data.iloc[i]['marital status'] == 'A95':
+            counter += 1
+            if data.iloc[i]['repaid'] == 1:
+                paid_back += 1
+    print("Number of women in dataset: ", counter)
+    print("Number of those who paid back: ", paid_back)
+    print("prosentage: ", paid_back/counter)
+    print("total: ", 700/1000)
+
+
+women(df)
+
 ## Test function ##
-def test_decision_maker(X_test, y_test, interest_rate, decision_maker):
+def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not_loan, woman_loan):
     n_test_examples = len(X_test)
     utility = 0
 
@@ -73,20 +115,34 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker):
     total_amount = 0
     total_utility = 0
     decision_maker.set_interest_rate(interest_rate)
+
     for t in range(n_test_examples):
         action = decision_maker.get_best_action(X_test.iloc[t])
         good_loan = y_test.iloc[t] # assume the labels are correct
         duration = X_test['duration'].iloc[t]
         amount = X_test['amount'].iloc[t]
         # If we don't grant the loan then nothing happens
+
+        """    A92: Female divorced/separated/married
+        A93: Male married/widowed
+        A94: Male Single
+        A95: female single
+        'marital status_AXX'
+        """
         if (action==1):
             if (good_loan != 1):
                 utility -= amount
+                #X_test['marital status_A95'].iloc[t] == 1
+                if (X_test['marital status_A92'].iloc[t] == 1):
+                    woman_not_loan += 1
             else:    
                 utility += amount*(pow(1 + interest_rate, duration) - 1)
+                if (X_test['marital status_A92'].iloc[t] == 1):
+                    woman_loan += 1
         total_utility += utility
         total_amount += amount
-    return utility, total_utility/total_amount
+
+    return utility, total_utility/total_amount, woman_not_loan, woman_loan
 
 
 ## Main code
@@ -101,21 +157,26 @@ interest_rate = 0.05
 
 ### Do a number of preliminary tests by splitting the data in parts
 from sklearn.model_selection import train_test_split
-for i in range(5):
+for i in range(1):
     n_tests = 100
     utility = 0
     investment_return = 0
+    woman_loan = 0
+    woman_not_loan = 0
     for iter in range(n_tests):
         X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
         X_train_noise, X_test_noise = add_noise(X_train, X_test)
         
         
         decision_maker.set_interest_rate(interest_rate)
-        decision_maker.fit(X_train_noise, y_train)
-        Ui, Ri = test_decision_maker(X_test_noise, y_test, interest_rate, decision_maker)
+        decision_maker.fit(X_train, y_train)
+        Ui, Ri, woman_not_loan, woman_loan = test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not_loan, woman_loan)
         utility += Ui
         investment_return += Ri
-
+    if (woman_not_loan + woman_loan != 0):
+        print("gave loan to woman: ", woman_loan/n_tests)
+        print("did not give loan to woman: ", woman_not_loan/n_tests)
+        print("persentage giving loan to women: ", woman_loan / (woman_loan + woman_not_loan))
     print("Average utility:", utility / n_tests)
     print("Average return on investment:", investment_return / n_tests)
 
