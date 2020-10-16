@@ -8,9 +8,9 @@ class AnadmaBanker:
     # Fit the model to the data.  You can use any model you like to do
     # the fit, however you should be able to predict all class
     # probabilities
-    def fit(self, X, y):
+    def fit(self, X, y, alpha=1.0):
         self.data = [X, y]
-        self.clf = MultinomialNB()
+        self.clf = MultinomialNB(alpha=alpha)
         self.clf.fit(X, y)
         return self.clf
        

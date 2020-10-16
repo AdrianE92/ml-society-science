@@ -115,7 +115,7 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not
     total_amount = 0
     total_utility = 0
     decision_maker.set_interest_rate(interest_rate)
-
+ 
     for t in range(n_test_examples):
         action = decision_maker.get_best_action(X_test.iloc[t])
         good_loan = y_test.iloc[t] # assume the labels are correct
@@ -124,7 +124,7 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not
         # If we don't grant the loan then nothing happens
 
         """    
-        A91: Male ivorced/separated, no one
+        A91: Male divorced/separated, no one
         A92: Female divorced/separated/married
         A93: Male married/widowed
         A94: Male Single
@@ -163,35 +163,40 @@ interest_rate = 0.05
 
 ### Do a number of preliminary tests by splitting the data in parts
 from sklearn.model_selection import train_test_split
+
 for i in range(1):
     n_tests = 100
-    utility = 0
-    investment_return = 0
-    woman_loan = 0
-    woman_not_loan = 0
-    man_loan = 0
-    man_not_loan = 0
-    for iter in range(n_tests):
-        X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
-        X_train_noise, X_test_noise = add_noise(X_train, X_test)
+    alpha = [10, 1, 0.1, 0.01, 0.001, 0.0001]
+
+    for alp in alpha:
+        print("\n For alpha = ", alp, " in Multinomil Naive Bayes")
+        utility = 0
+        investment_return = 0
+        woman_loan = 0
+        woman_not_loan = 0
+        man_loan = 0
+        man_not_loan = 0
+
+        for iter in range(n_tests):
+            X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
+            X_train_noise, X_test_noise = add_noise(X_train, X_test)
         
-        
-        decision_maker.set_interest_rate(interest_rate)
-        decision_maker.fit(X_train, y_train)
-        Ui, Ri, woman_not_loan, woman_loan, man_not_loan, man_loan = test_decision_maker(X_test, y_test, interest_rate, 
+            decision_maker.set_interest_rate(interest_rate)
+            decision_maker.fit(X_train, y_train, alp)
+            Ui, Ri, woman_not_loan, woman_loan, man_not_loan, man_loan = test_decision_maker(X_test, y_test, interest_rate, 
                                                                  decision_maker, woman_not_loan, 
                                                                  woman_loan, man_not_loan, man_loan)
-        utility += Ui
-        investment_return += Ri
-    if (woman_not_loan + woman_loan != 0):
-        print("gave loan to number of woman: ", woman_loan/n_tests)
-        print("did not give loan to number of woman: ", woman_not_loan/n_tests)
-        print("percentage giving loan to women: ", woman_loan / (woman_loan + woman_not_loan))
-    if (man_not_loan + man_loan != 0):
-        print("gave loan to number of men: ", man_loan/n_tests)
-        print("did not give loan to number of men: ", man_not_loan/n_tests)
-        print("percentage giving loan to men: ", man_loan / (man_loan + man_not_loan))
-    print("Average utility:", utility / n_tests)
-    print("Average return on investment:", investment_return / n_tests)
+            utility += Ui
+            investment_return += Ri
+        if (woman_not_loan + woman_loan != 0):
+            print("gave loan to number of woman: ", woman_loan/n_tests)
+            print("did not give loan to number of woman: ", woman_not_loan/n_tests)
+            print("percentage giving loan to women: ", woman_loan / (woman_loan + woman_not_loan))
+        if (man_not_loan + man_loan != 0):
+            print("gave loan to number of men: ", man_loan/n_tests)
+            print("did not give loan to number of men: ", man_not_loan/n_tests)
+            print("percentage giving loan to men: ", man_loan / (man_loan + man_not_loan))
+        print("Average utility:", utility / n_tests)
+        print("Average return on investment:", investment_return / n_tests)
 
 
