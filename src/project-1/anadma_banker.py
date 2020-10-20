@@ -34,14 +34,18 @@ class AnadmaBanker:
     # 2nd attribute of x. Then the return if the loan is paid off to you is amount_of_loan*(1 + rate)^length_of_loan
     # The return if the loan is not paid off is -amount_of_loan.
 
-    def expected_utility(self, x):
-        predict = self.predict_proba(x)
-        return predict * x[4] * (np.power(1 + self.rate, x[1]) - 1) - (1 - predict)*x[4]
+    def expected_utility(self, x, action):
+        
+        if action == 0:
+            return 0
+        else:
+            predict = self.predict_proba(x)
+            return predict * x[4] * (np.power(1 + self.rate, x[1]) - 1) - (1 - predict)*x[4]
 
     # Return the best action. This is normally the one that maximises expected utility.
     # However, you are allowed to deviate from this if you can justify the reason.
     def get_best_action(self, x):
-        if self.expected_utility(x) > 0:
+        if self.expected_utility(x, 1) > self.expected_utility(x, 0):
             return 1
         else:
             return 0
