@@ -168,8 +168,9 @@ from sklearn.model_selection import cross_val_score
 
 for i in range(1):
     n_tests = 100
-    alpha = [10, 1, 0.1, 0.01, 0.001, 0.0001]
-
+    #alpha = [10, 1, 0.1, 0.01, 0.001, 0.0001]
+    alpha = [0.1]
+    
     for alp in alpha:
         print("\n For alpha = ", alp, " in Multinomil Naive Bayes")
         utility = 0
@@ -195,7 +196,8 @@ for i in range(1):
             investment_return += Ri
             utility_list.append(Ui)
             invest_list.append(Ri)
-            """
+            
+         
         if (woman_not_loan + woman_loan != 0):
             print("gave loan to number of woman: ", woman_loan/n_tests)
             print("did not give loan to number of woman: ", woman_not_loan/n_tests)
@@ -204,8 +206,12 @@ for i in range(1):
             print("gave loan to number of men: ", man_loan/n_tests)
             print("did not give loan to number of men: ", man_not_loan/n_tests)
             print("percentage giving loan to men: ", man_loan / (man_loan + man_not_loan))
-            """
-        
+         
+        plt.bar([1,2,3,4],[woman_loan/n_tests, woman_not_loan/n_tests, man_loan/n_tests, man_not_loan/n_tests],
+                tick_label=["female got loan","female not loan","male got loan","male not loan"], color=["green", "red", "green", "red"])
+        plt.ylabel("count")
+        plt.show()
+
         print("Average utility:", utility / n_tests)
         print("95% confidence interval utility", st.t.interval(alpha=0.95, df=len(utility_list)-1, loc=np.mean(utility_list), scale=st.sem(utility_list)))
         plt.hist(utility_list)
