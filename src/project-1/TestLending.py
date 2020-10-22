@@ -1,72 +1,93 @@
 import pandas
 import numpy as np
 import matplotlib.pyplot as plt
+import anadma_banker
+import random_banker
+from sklearn.model_selection import train_test_split
 
-#Helper function to map the values of repaid
 def mapping(x):
+    """Map 2 to 0"""
     if x == 2:
         x = 0
-    else:
-        x = 1
     return x
 
-## Set up for dataset
-features = ['checking account balance', 'duration', 'credit history',
-            'purpose', 'amount', 'savings', 'employment', 'installment',
-            'marital status', 'other debtors', 'residence time',
-            'property', 'age', 'other installments', 'housing', 'credits',
-            'job', 'persons', 'phone', 'foreign']
-target = 'repaid'
-
-df = pandas.read_csv('../../data/credit/german.data', sep=' ',
-                     names=features+[target])
-df['repaid'] = df['repaid'].map(mapping)
-
-#df = pandas.read_csv('../../data/credit/german.data', sep=' ', names=features+[target])
-#df = pandas.read_csv('../../data/credit/D_valid.csv', sep=' ', names=features+[target])
-
-numerical_features = ['duration', 'age', 'residence time', 'installment', 'amount', 'persons', 'credits']
-quantitative_features = list(filter(lambda x: x not in numerical_features, features))
-quantitative_features_2 = []
-X = pandas.get_dummies(df, columns=quantitative_features, drop_first=True)
-for i in X.columns:
-    if i not in numerical_features and i != 'repaid':
-        quantitative_features_2.append(i)
-
-encoded_features = list(filter(lambda x: x != target, X.columns))
-
 def qua_noise(X):
+    """
+    Add noise to quantitative data.
+
+    Takes a dataframe with quantitative data as 0 or 1 as input,
+    adds either 0 or 1 to each datapoint with the probability of 0
+    being 70%. Takes the new datapoint modulo 2, to return either
+    0 or 1 as the new datapoint.
+
+    Parameters:
+    X   (Pandas dataframe): The dataframe you want to add noise to
+
+    Returns:
+    X   (Pandas dataframe): The dataframe with added noise
+    """
+
     w = np.random.choice([0, 1], size=(len(X), len(quantitative_features_2)), p=[0.7, 0.3])
     X[quantitative_features_2] = (X[quantitative_features_2] + w) % 2
     return X
 
-#Create noise using differential privacy through laplace
-#We implement a coin-toss to randomize what data becomes noisy.
 def laplace_func(X):
+    """
+    Adds noise to numerical data using laplace.
+
+    Takes a dataframe with numerical data, and adds differential
+    privacy using laplace. First we do a coin-toss to randomize
+    what data gets noisy. We add noise based on the minimum and 
+    maximum value of the data, and set all negative values to 0
+
+    Parameters:
+    X   (Pandas dataframe): The dataframe you want to add noise to
+
+    Returns:
+    X   (Pandas dataframe): The dataframe with added noise
+    """
+
     X_noise = X.copy()
-    epsilon = 0.1
+    epsilon = 5
     n = np.shape(X)[1]
     for i in numerical_features:
         if np.random.random() > 0.5:
             M = (X[i].max()-X[i].min())
             l = (M*epsilon)/n
-            w = np.random.laplace(0, l)    
+            w = np.random.laplace(0, l)
             X_noise[i] += w
-
+    X_noise[X_noise < 0] = 0
     return X_noise
 
-
 def add_noise(X_train, X_test):
+    """
+    Function to apply noise to both quantitative and numerical data
+
+    Parameters:
+    X_train         (Pandas dataframe): The training data
+    X_test          (Pandas dataframe): The test data
+
+    Returns:
+    X_train_noise   (Pandas dataframe): The training data with noise
+    X_test_noise    (Pandas dataframe): The test data with noise
+    """
+
     X_train_noise = laplace_func(X_train)
     X_test_noise = laplace_func(X_test)
     X_train_noise = qua_noise(X_train_noise)
     X_test_noise = qua_noise(X_test_noise)
     return X_train_noise, X_test_noise
 
-
 def foreign(data):
     """
+    A function to show the distribution of foreign workers in our data.
+
+    Params:
+    data    (Pandas dataframe): The data imported from german.data
+
+    Returns:
     """
+
     counter = 0
     paid_back = 0
     for i in range(data.shape[0]):
@@ -79,18 +100,16 @@ def foreign(data):
     print("prosentage: ", paid_back/counter)
     print("total: ", 700/1000)
 
-
-#foreign(df)
-
-
 def women(data):
-    """se hvor mange kvinner og men funksjonen vår faktisk gir lån til
-    A92: Female divorced/separated/married
-    A93: Male married/widowed
-    A94: Male Single
-    A95: female single
-    'marital status_AXX'
     """
+    A function to show the distribution of women in our dataset.
+
+    Parameters:
+    data    (Pandas dataframe): The data imported from german.data
+
+    Returns:
+    """
+
     counter = 0
     paid_back = 0
     for i in range(data.shape[0]):
@@ -99,104 +118,101 @@ def women(data):
             if data.iloc[i]['repaid'] == 1:
                 paid_back += 1
     print("Number of women in dataset: ", counter)
-    print("Number of those who paid back: ", paid_back)
-    print("prosentage: ", paid_back/counter)
-    print("total: ", 700/1000)
+    print("Number of women who paid back: ", paid_back)
+    print("Percentage: ", paid_back/counter)
+    print("Total: ", 700/1000)
 
+def test_decision_maker(X_test, y_test, interest_rate, decision_maker):
+    """
+    A function to find the expect utility and return on investment for a decision maker.
 
-women(df)
+    Takes a decision maker and compares the test data.
+    If the decision maker grants a loan that would be repaid,
+    we add that to total amount, and utility with an interest rate.
+    If not, we subtract the amount from utility and add it to total.
+    If we don't grant the loan, nothing happens.
 
-## Test function ##
-def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not_loan, woman_loan, man_not_loan, man_loan):
+    Parameters:
+    X_test          (Pandas dataframe): The held out test set without labels
+    y_test          (Pandas dataframe): The labels of the held out test set
+    interest_rate   (float): The interest rate for the loan
+    decision_maker  (object): A decision maker class trained on the german.data data
+
+    Returns:
+    utility (float):
+    avg_roi (float): The average return on investment
+    """
+    
+    #woman_not_loan, woman_loan, man_not_loan, man_loan
     n_test_examples = len(X_test)
     utility = 0
 
-    ## Example test function - this is only an unbiased test if the data has not been seen in training
     total_amount = 0
     total_utility = 0
     decision_maker.set_interest_rate(interest_rate)
  
     for t in range(n_test_examples):
         action = decision_maker.get_best_action(X_test.iloc[t])
-        good_loan = y_test.iloc[t] # assume the labels are correct
+        good_loan = y_test.iloc[t]
         duration = X_test['duration'].iloc[t]
         amount = X_test['amount'].iloc[t]
-        # If we don't grant the loan then nothing happens
 
-        """    
-        A91: Male divorced/separated, no one
-        A92: Female divorced/separated/married
-        A93: Male married/widowed
-        A94: Male Single
-        A95: female single, no one
-        """
         if (action==1):
             if (good_loan != 1):
                 utility -= amount
-
-                if (X_test['marital status_A92'].iloc[t] == 1):
-                    woman_not_loan += 1
-                if (X_test['marital status_A93'].iloc[t] == 1 or X_test['marital status_A94'].iloc[t] == 1):
-                    man_not_loan += 1
             else:    
                 utility += amount*(pow(1 + interest_rate, duration) - 1)
-                if (X_test['marital status_A92'].iloc[t] == 1):
-                    woman_loan += 1
-                if (X_test['marital status_A93'].iloc[t] == 1 or X_test['marital status_A94'].iloc[t] == 1):
-                    man_loan += 1
 
         total_utility += utility
         total_amount += amount
+    
+    avg_roi = total_utility/total_amount
 
-    return utility, total_utility/total_amount, woman_not_loan, woman_loan, man_not_loan, man_loan
+    return utility, avg_roi
 
 
-## Main code
+features = ['checking account balance', 'duration', 'credit history',
+            'purpose', 'amount', 'savings', 'employment', 'installment',
+            'marital status', 'other debtors', 'residence time',
+            'property', 'age', 'other installments', 'housing', 'credits',
+            'job', 'persons', 'phone', 'foreign']
+target = 'repaid'
 
-### Setup model
-import anadma_banker  #this is a random banker
-import random_banker
+df = pandas.read_csv('../../data/credit/german.data', sep=' ',
+                     names=features+[target])
+df['repaid'] = df['repaid'].map(mapping)
+
+numerical_features = ['duration', 'age', 'residence time', 'installment', 'amount', 'persons', 'credits']
+quantitative_features = list(filter(lambda x: x not in numerical_features, features))
+quantitative_features_2 = []
+X = pandas.get_dummies(df, columns=quantitative_features, drop_first=True)
+
+for i in X.columns:
+    if i not in numerical_features and i != 'repaid':
+        quantitative_features_2.append(i)
+
+encoded_features = list(filter(lambda x: x != target, X.columns))
+
 decision_maker = anadma_banker.AnadmaBanker()
-#decision_maker = random_banker.RandomBanker()
+rand_decision_maker = random_banker.RandomBanker()
 
 interest_rate = 0.05
+n_tests = 100
+alp = 0.001
+utility = 0
+investment_return = 0
 
-### Do a number of preliminary tests by splitting the data in parts
-from sklearn.model_selection import train_test_split
+for iter in range(n_tests):
+    X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], 
+                                                        X[target], test_size=0.2)
+    X_train_noise, X_test_noise = add_noise(X_train, X_test)
 
-for i in range(1):
-    n_tests = 100
-    alpha = [10, 1, 0.1, 0.01, 0.001, 0.0001]
+    decision_maker.set_interest_rate(interest_rate)
+    decision_maker.fit(X_train_noise, y_train, alp)
+    Ui, Ri, = test_decision_maker(X_test_noise, y_test, 
+                                    interest_rate, decision_maker)
+    utility += Ui
+    investment_return += Ri
 
-    for alp in alpha:
-        print("\n For alpha = ", alp, " in Multinomil Naive Bayes")
-        utility = 0
-        investment_return = 0
-        woman_loan = 0
-        woman_not_loan = 0
-        man_loan = 0
-        man_not_loan = 0
-
-        for iter in range(n_tests):
-            X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
-            X_train_noise, X_test_noise = add_noise(X_train, X_test)
-        
-            decision_maker.set_interest_rate(interest_rate)
-            decision_maker.fit(X_train, y_train, alp)
-            Ui, Ri, woman_not_loan, woman_loan, man_not_loan, man_loan = test_decision_maker(X_test, y_test, interest_rate, 
-                                                                 decision_maker, woman_not_loan, 
-                                                                 woman_loan, man_not_loan, man_loan)
-            utility += Ui
-            investment_return += Ri
-        if (woman_not_loan + woman_loan != 0):
-            print("gave loan to number of woman: ", woman_loan/n_tests)
-            print("did not give loan to number of woman: ", woman_not_loan/n_tests)
-            print("percentage giving loan to women: ", woman_loan / (woman_loan + woman_not_loan))
-        if (man_not_loan + man_loan != 0):
-            print("gave loan to number of men: ", man_loan/n_tests)
-            print("did not give loan to number of men: ", man_not_loan/n_tests)
-            print("percentage giving loan to men: ", man_loan / (man_loan + man_not_loan))
-        print("Average utility:", utility / n_tests)
-        print("Average return on investment:", investment_return / n_tests)
-
-
+print("Average utility:", utility / n_tests)
+print("Average return on investment:", investment_return / n_tests)
