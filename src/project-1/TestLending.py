@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import anadma_banker
 import random_banker
 from sklearn.model_selection import train_test_split
+import scipy.stats as st
 
 def mapping(x):
     """Map 2 to 0"""
@@ -201,6 +202,8 @@ n_tests = 100
 alp = 0.001
 utility = 0
 investment_return = 0
+utility_list = []
+invest_list = []
 
 for iter in range(n_tests):
     X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], 
@@ -213,6 +216,13 @@ for iter in range(n_tests):
                                     interest_rate, decision_maker)
     utility += Ui
     investment_return += Ri
+    utility_list.append(Ui)
+    invest_list.append(Ri)
 
 print("Average utility:", utility / n_tests)
+print("95% confidence interval utility", st.t.interval(alpha=0.95, df=len(utility_list)-1, loc=np.mean(utility_list), scale=st.sem(utility_list)))
+
 print("Average return on investment:", investment_return / n_tests)
+plt.hist(utility_list)
+plt.show()
+print("95% confidence interval return on investment", st.t.interval(alpha=0.95, df=len(invest_list)-1, loc=np.mean(invest_list), scale=st.sem(invest_list)))
