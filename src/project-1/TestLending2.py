@@ -1,6 +1,7 @@
 import pandas
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.stats as st
 
 #Helper function to map the values of repaid
 def mapping(x):
@@ -163,6 +164,7 @@ interest_rate = 0.05
 
 ### Do a number of preliminary tests by splitting the data in parts
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 
 for i in range(1):
     n_tests = 100
@@ -176,6 +178,8 @@ for i in range(1):
         woman_not_loan = 0
         man_loan = 0
         man_not_loan = 0
+        utility_list = []
+        invest_list = []
 
         for iter in range(n_tests):
             X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
@@ -183,11 +187,15 @@ for i in range(1):
         
             decision_maker.set_interest_rate(interest_rate)
             decision_maker.fit(X_train, y_train, alp)
+         
             Ui, Ri, woman_not_loan, woman_loan, man_not_loan, man_loan = test_decision_maker(X_test, y_test, interest_rate, 
                                                                  decision_maker, woman_not_loan, 
                                                                  woman_loan, man_not_loan, man_loan)
             utility += Ui
             investment_return += Ri
+            utility_list.append(Ui)
+            invest_list.append(Ri)
+            """
         if (woman_not_loan + woman_loan != 0):
             print("gave loan to number of woman: ", woman_loan/n_tests)
             print("did not give loan to number of woman: ", woman_not_loan/n_tests)
@@ -196,6 +204,16 @@ for i in range(1):
             print("gave loan to number of men: ", man_loan/n_tests)
             print("did not give loan to number of men: ", man_not_loan/n_tests)
             print("percentage giving loan to men: ", man_loan / (man_loan + man_not_loan))
+            """
+        
         print("Average utility:", utility / n_tests)
+        print("95% confidence interval utility", st.t.interval(alpha=0.95, df=len(utility_list)-1, loc=np.mean(utility_list), scale=st.sem(utility_list)))
+        plt.hist(utility_list)
+        plt.xlabel("average utility for different random train/test split")
+        plt.ylabel("number of instanses")
+        plt.show()
+
         print("Average return on investment:", investment_return / n_tests)
+        print("95% confidence interval return on investment", st.t.interval(alpha=0.95, df=len(invest_list)-1, loc=np.mean(invest_list), scale=st.sem(invest_list)))
+
 

@@ -199,7 +199,7 @@ rand_decision_maker = random_banker.RandomBanker()
 
 interest_rate = 0.05
 n_tests = 100
-alp = 0.001
+alp = 0.1
 utility = 0
 investment_return = 0
 utility_list = []
@@ -223,6 +223,4 @@ print("Average utility:", utility / n_tests)
 print("95% confidence interval utility", st.t.interval(alpha=0.95, df=len(utility_list)-1, loc=np.mean(utility_list), scale=st.sem(utility_list)))
 
 print("Average return on investment:", investment_return / n_tests)
-plt.hist(utility_list)
-plt.show()
 print("95% confidence interval return on investment", st.t.interval(alpha=0.95, df=len(invest_list)-1, loc=np.mean(invest_list), scale=st.sem(invest_list)))
