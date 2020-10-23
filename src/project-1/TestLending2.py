@@ -2,6 +2,7 @@ import pandas
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.utils import resample
+from sklearn.model_selection import cross_val_score
 
 #Helper function to map the values of repaid
 def mapping(x):
@@ -77,7 +78,7 @@ def foreign(data):
                 paid_back += 1
     print("Number of foreign in dataset: ", counter)
     print("Number of those who paid back: ", paid_back)
-    print("prosentage: ", paid_back/counter)
+    print("percentage: ", paid_back/counter)
     print("total: ", 700/1000)
 
 
@@ -101,7 +102,7 @@ def women(data):
                 paid_back += 1
     print("Number of women in dataset: ", counter)
     print("Number of those who paid back: ", paid_back)
-    print("prosentage: ", paid_back/counter)
+    print("percentage: ", paid_back/counter)
     print("total: ", 700/1000)
 
 
@@ -110,9 +111,9 @@ women(df)
 def bootstrap(data):
     """bootstrap resamples with replacement
     """
-    size = int(len(data) * 0.8)
+    size = int(len(data))
     train = resample(data, n_samples=size, replace=True)
-    test = data.drop(train.index)   
+    test = data.drop(train.index)  
     return train[encoded_features], train[target], test[encoded_features], test[target]
 
 
@@ -177,6 +178,8 @@ interest_rate = 0.05
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_score
 
+new_X, hold_out_set = train_test_split(X, test_size=0.2)
+
 for i in range(1):
     n_tests = 100
     #alpha = [10, 1, 0.1, 0.01, 0.001, 0.0001]
@@ -192,23 +195,30 @@ for i in range(1):
         man_not_loan = 0
         utility_list = []
         invest_list = []
+        hold_utility = 0
+        hold_invest = 0
 
         for iter in range(n_tests):
-            X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
-            #X_train, y_train, X_test, y_test = bootstrap(X)
+            #X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
+            X_train, y_train, X_test, y_test = bootstrap(new_X)
             X_train_noise, X_test_noise = add_noise(X_train, X_test)
         
             decision_maker.set_interest_rate(interest_rate)
-            decision_maker.fit(X_train, y_train, alp)
-         
+            decision_maker.fit(X_train_noise, y_train, alp)
+
             Ui, Ri, woman_not_loan, woman_loan, man_not_loan, man_loan = test_decision_maker(X_test, y_test, interest_rate, 
                                                                  decision_maker, woman_not_loan, 
                                                                  woman_loan, man_not_loan, man_loan)
+
+            hold_Ui, hold_Ri, _, _, _, _ = test_decision_maker(hold_out_set[encoded_features], hold_out_set[target], 
+                                                               interest_rate, decision_maker, woman_not_loan, 
+                                                               woman_loan, man_not_loan, man_loan)
             utility += Ui
             investment_return += Ri
+            hold_utility += hold_Ui
+            hold_invest += hold_Ri
             utility_list.append(Ui)
             invest_list.append(Ri)
-            
          
         if (woman_not_loan + woman_loan != 0):
             print("gave loan to number of woman: ", woman_loan/n_tests)
@@ -225,11 +235,13 @@ for i in range(1):
         plt.show()
 
         print("Average utility:", utility / n_tests)
-        print("95% confidence interval utility", np.percentile(utility_list, 0.025), np.percentile(utility_list, 0.975))
+        print("95% confidence interval utility", np.percentile(utility_list, 2.5), np.percentile(utility_list, 97.5))
         plt.hist(utility_list)
         plt.xlabel("average utility for different random train/test split")
         plt.ylabel("number of instanses")
         plt.show()
 
         print("Average return on investment:", investment_return / n_tests)
-        print("95% confidence interval return on investment", np.percentile(invest_list, 0.025), np.percentile(invest_list, 0.975))
+        print("95% confidence interval return on investment", np.percentile(invest_list, 2.5), np.percentile(invest_list, 97.5))
+
+        print("\n Average utility and return on investment from hold out set:", hold_utility/ n_tests, hold_invest/ n_tests)
