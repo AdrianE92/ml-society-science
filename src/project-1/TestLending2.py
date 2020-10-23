@@ -125,6 +125,7 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not
     total_amount = 0
     total_utility = 0
     amount_lim = 10000
+    amount_lim_low = 1000
     decision_maker.set_interest_rate(interest_rate)
     
     for t in range(n_test_examples):
@@ -133,7 +134,7 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not
         duration = X_test['duration'].iloc[t]
         amount = X_test['amount'].iloc[t]
         # If we don't grant the loan then nothing happens
-        if amount >= amount_lim:
+        if amount < amount_lim:
             action = 0
         """    
         A91: Male divorced/separated, no one
@@ -220,8 +221,8 @@ for i in range(1):
             print("percentage giving loan to men: ", man_loan / (man_loan + man_not_loan))
          
         plt.bar([1,2,3,4],[woman_loan/n_tests, woman_not_loan/n_tests, man_loan/n_tests, man_not_loan/n_tests],
-                tick_label=["female got loan","female not loan","male got loan","male not loan"], color=["green", "red", "green", "red"])
-        plt.ylabel("count")
+                tick_label=["Female granted","Female denied","Male granted","Male denied"], color=["green", "red", "green", "red"])
+        plt.ylabel("Number of persons")
         plt.show()
 
         print("Average utility:", utility / n_tests)
