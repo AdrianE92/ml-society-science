@@ -108,16 +108,11 @@ def women(data):
 women(df)
 
 def bootstrap(data):
-    """resample to find confidence intervall
+    """bootstrap resamples with replacement
     """
-    size = int(len(data) * 0.7)
-    train = resample(data, n_samples=size)
-    test = data.drop(train.index)
- 
-    for i in data.index:
-        if i  in train:
-            print("feil")
-   
+    size = int(len(data) * 0.8)
+    train = resample(data, n_samples=size, replace=True)
+    test = data.drop(train.index)   
     return train[encoded_features], train[target], test[encoded_features], test[target]
 
 
@@ -129,15 +124,17 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not
     ## Example test function - this is only an unbiased test if the data has not been seen in training
     total_amount = 0
     total_utility = 0
+    amount_lim = 10000
     decision_maker.set_interest_rate(interest_rate)
- 
+    
     for t in range(n_test_examples):
         action = decision_maker.get_best_action(X_test.iloc[t])
         good_loan = y_test.iloc[t] # assume the labels are correct
         duration = X_test['duration'].iloc[t]
         amount = X_test['amount'].iloc[t]
         # If we don't grant the loan then nothing happens
-
+        if amount >= amount_lim:
+            action = 0
         """    
         A91: Male divorced/separated, no one
         A92: Female divorced/separated/married
@@ -197,8 +194,8 @@ for i in range(1):
         invest_list = []
 
         for iter in range(n_tests):
-            #X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
-            X_train, y_train, X_test, y_test = bootstrap(X)
+            X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
+            #X_train, y_train, X_test, y_test = bootstrap(X)
             X_train_noise, X_test_noise = add_noise(X_train, X_test)
         
             decision_maker.set_interest_rate(interest_rate)
