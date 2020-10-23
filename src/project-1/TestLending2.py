@@ -2,7 +2,6 @@ import pandas
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.utils import resample
-from sklearn.model_selection import cross_val_score
 
 #Helper function to map the values of repaid
 def mapping(x):
@@ -125,8 +124,8 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not
     ## Example test function - this is only an unbiased test if the data has not been seen in training
     total_amount = 0
     total_utility = 0
-    amount_lim = 10000
-    amount_lim_low = 1000
+    #amount_lim = 10000
+    #amount_lim_low = 1000
     decision_maker.set_interest_rate(interest_rate)
     
     for t in range(n_test_examples):
@@ -135,8 +134,8 @@ def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not
         duration = X_test['duration'].iloc[t]
         amount = X_test['amount'].iloc[t]
         # If we don't grant the loan then nothing happens
-        if amount < amount_lim:
-            action = 0
+        #if amount < amount_lim:
+        #    action = 0
         """    
         A91: Male divorced/separated, no one
         A92: Female divorced/separated/married
@@ -177,12 +176,11 @@ interest_rate = 0.05
 
 ### Do a number of preliminary tests by splitting the data in parts
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
 
 new_X, hold_out_set = train_test_split(X, test_size=0.2)
 
 for i in range(1):
-    n_tests = 100
+    n_tests = 1000
     #alpha = [10, 1, 0.1, 0.01, 0.001, 0.0001]
     alpha = [0.1]
     
@@ -245,4 +243,4 @@ for i in range(1):
         print("Average return on investment:", investment_return / n_tests)
         print("95% confidence interval return on investment", np.percentile(invest_list, 2.5), np.percentile(invest_list, 97.5))
 
-        print("\n Average utility and return on investment from hold out set:", hold_utility/ n_tests, hold_invest/ n_tests)
+        print("\n Average utility and return on investment from hold out set: ", hold_utility / n_tests, hold_invest / n_tests)
