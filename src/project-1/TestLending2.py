@@ -1,7 +1,7 @@
 import pandas
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.stats as st
+from sklearn.utils import resample
 
 #Helper function to map the values of repaid
 def mapping(x):
@@ -107,6 +107,20 @@ def women(data):
 
 women(df)
 
+def bootstrap(data):
+    """resample to find confidence intervall
+    """
+    size = int(len(data) * 0.7)
+    train = resample(data, n_samples=size)
+    test = data.drop(train.index)
+ 
+    for i in data.index:
+        if i  in train:
+            print("feil")
+   
+    return train[encoded_features], train[target], test[encoded_features], test[target]
+
+
 ## Test function ##
 def test_decision_maker(X_test, y_test, interest_rate, decision_maker, woman_not_loan, woman_loan, man_not_loan, man_loan):
     n_test_examples = len(X_test)
@@ -183,7 +197,8 @@ for i in range(1):
         invest_list = []
 
         for iter in range(n_tests):
-            X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
+            #X_train, X_test, y_train, y_test = train_test_split(X[encoded_features], X[target], test_size=0.2)
+            X_train, y_train, X_test, y_test = bootstrap(X)
             X_train_noise, X_test_noise = add_noise(X_train, X_test)
         
             decision_maker.set_interest_rate(interest_rate)
@@ -213,13 +228,11 @@ for i in range(1):
         plt.show()
 
         print("Average utility:", utility / n_tests)
-        print("95% confidence interval utility", st.t.interval(alpha=0.95, df=len(utility_list)-1, loc=np.mean(utility_list), scale=st.sem(utility_list)))
+        print("95% confidence interval utility", np.percentile(utility_list, 0.025), np.percentile(utility_list, 0.975))
         plt.hist(utility_list)
         plt.xlabel("average utility for different random train/test split")
         plt.ylabel("number of instanses")
         plt.show()
 
         print("Average return on investment:", investment_return / n_tests)
-        print("95% confidence interval return on investment", st.t.interval(alpha=0.95, df=len(invest_list)-1, loc=np.mean(invest_list), scale=st.sem(invest_list)))
-
-
+        print("95% confidence interval return on investment", np.percentile(invest_list, 0.025), np.percentile(invest_list, 0.975))
