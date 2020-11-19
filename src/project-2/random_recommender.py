@@ -62,6 +62,7 @@ class RandomRecommender:
     ## This model can then be used in estimate_utility(), predict_proba() and recommend()
     def fit_treatment_outcome(self, data, actions, outcome):
         print("Fitting treatment outcomes")
+
         return None
 
     ## Estimate the utility of a specific policy from historical data (data, actions, outcome),
@@ -75,18 +76,21 @@ class RandomRecommender:
     ##
     ## The policy should be a recommender that implements get_action_probability()
     def estimate_utility(self, data, actions, outcome, policy=None):
-        return 0
+        if policy == None:
+            return np.sum(-0.1*actions + outcome)/len(outcome)
+        else:
+            return policy.estimate_utility(data, actions, outcome)
 
     # Return a distribution of effects for a given person's data and a specific treatment.
     # This should be an numpy.array of length self.n_outcomes
     def predict_proba(self, data, treatment):
-        return numpy.zeros(self.n_outcomes)
+        return np.zeros(self.n_outcomes)
 
     # Return a distribution of recommendations for a specific user datum
     # This should a numpy array of size equal to self.n_actions, summing up to 1
     def get_action_probabilities(self, user_data):
         #print("Recommending")
-        return np.ones(self.n_actions) / self.n_actions;
+        return np.ones(self.n_actions) / self.n_actions
 
     
     # Return recommendations for a specific user datum

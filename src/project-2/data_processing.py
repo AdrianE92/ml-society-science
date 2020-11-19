@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import seaborn as sn
+#import seaborn as sn
 import matplotlib.pyplot as plt
 
 features = pd.read_csv('../../data/medical/historical_X.dat') 
@@ -19,7 +19,7 @@ print("Percentage of patients cured with treatment: %f" %(conf_mat[1][1]/(conf_m
 We assume that result=0 means that the patient is not cured and that result=1 means that the patient is cured.
 First we make a confusion matrix to see whether our assumptions are right.
 
-Result       0     1
+      Result 0     1
 Action
 0          7633    69
 1           946  1351
@@ -29,3 +29,4 @@ Further, we can look at the percentage of patients cured by trick vs treatment
 Percentage of patients cured with trick: 0.89%
 Percentage of patients cured with treatment: 58.81%
 """
+
