@@ -1,5 +1,6 @@
 import numpy as np
 import pandas
+np.random.seed(42)
 def default_reward_function(action, outcome):
     return -0.1*action + outcome
 
@@ -45,6 +46,18 @@ print("Fitting historical data to the policy")
 policy.fit_treatment_outcome(features, actions, outcome)
 ## Run an online test with a small number of actions
 print(policy.estimate_utility(data=features, actions=actions, outcome=outcome))
+
+n_data = 1000
+samples = len(outcome)
+utilities = np.zeros(n_data)
+
+for i in range(n_data):
+    test = np.random.choice(samples, samples)
+    test_outcome = outcome[test]
+    test_action = actions[test]
+    utilities[i] = policy.estimate_utility(data=features, actions=test_action, outcome=test_outcome)
+
+print(np.percentile(utilities, [2.5, 97.5]))
 """
 print("Running an online test")
 n_tests = 1000
