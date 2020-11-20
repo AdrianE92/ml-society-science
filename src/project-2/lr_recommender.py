@@ -72,6 +72,7 @@ class LogisticRegressionRecommender:
 
          (The policy should be a recommender that implements get_action_probability())
         """
+        
         if policy == None:
             #return average reward of observed actions and outcomes
             return sum(self.reward(actions, outcome))

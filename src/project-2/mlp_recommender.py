@@ -22,6 +22,7 @@
 
 from sklearn import linear_model
 from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 np.random.seed(42)
@@ -64,10 +65,17 @@ class MlpRecommender:
     ## This model can then be used in estimate_utility(), predict_proba() and recommend()
     def fit_treatment_outcome(self, data, actions, outcome):
         print("Fitting treatment outcomes")
-        clf = MLPClassifier()
-        fit_data = pd.DataFrame(data)
+        #Scaling the data to get normalized features
+        self.scaler = StandardScaler()
+        self.scaler.fit(data)
+        scaled_data = self.scaler.transform(data)
+        
+        
+        self.model = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(5,2), random_state=0)
+        fit_data = pd.DataFrame(scaled_data)
         fit_data['a'] = actions
-        clf.fit(fit_data.values, np.ravel(outcome))
+        self.model.fit(fit_data.values, np.ravel(outcome))
+        #print("fit?")
         return None
 
     ## Estimate the utility of a specific policy from historical data (data, actions, outcome),
@@ -84,16 +92,29 @@ class MlpRecommender:
         if policy == None:
             return sum(self.reward(actions, outcome))
         else:
+            E_utility = 0
+            print("Estimating")
+            ## Iterating through data:
             for i in range(data.shape[0]):
-                #i_data = np.array(data[row].reshape(1,130))
-                action = policy.recommend(i_data)
+                curr_data = np.array(data[i].reshape(1,130))
 
-            return policy.estimate_utility(data, actions, outcome)
+                recommended_action = policy.recommend(curr_data)
+                action_proba = policy.predict_proba(curr_data, recommended_action)
+
+                # E[f(X)] = \sum_x p(x)*f(x):
+                E_reward = action_proba[0,0]*self.reward(recommended_action, 0) + action_proba[0,1]*self.reward(recommended_action, 1)
+
+                E_utility += E_reward
+
+            return E_utility
+           
 
     # Return a distribution of effects for a given person's data and a specific treatment.
     # This should be an numpy.array of length self.n_outcomes
     def predict_proba(self, data, treatment):
-        return np.zeros(self.n_outcomes)
+        df = pd.DataFrame(data)
+        df['a'] = treatment
+        return self.model.predict_proba(df)
 
     # Return a distribution of recommendations for a specific user datum
     # This should a numpy array of size equal to self.n_actions, summing up to 1
@@ -105,7 +126,21 @@ class MlpRecommender:
     # Return recommendations for a specific user datum
     # This should be an integer in range(self.n_actions)
     def recommend(self, user_data):
-        return np.random.choice(self.n_actions, p = self.get_action_probabilities(user_data))
+        # Finding the probabilities of outcomes given user_data and action
+        #print("recommending")
+        scaled_user_data = self.scaler.transform(user_data)
+        P_outcomes_placebo = self.predict_proba(scaled_user_data, 0)
+        P_outcomes_drug = self.predict_proba(scaled_user_data, 1)
+
+        # Estimating reward
+        E_reward_placebo = P_outcomes_placebo[0,0]*self.reward(0, 0) + P_outcomes_placebo[0,1]*self.reward(0, 1)
+        E_reward_drug = P_outcomes_drug[0,0]*self.reward(1, 0)+ P_outcomes_drug[0,1]*self.reward(1, 1)
+
+        # Return the best action
+        if (E_reward_placebo >= E_reward_drug):
+            return 0
+        else:
+            return 1
 
     # Observe the effect of an action. This is an opportunity for you
     # to refit your models, to take the new information into account.

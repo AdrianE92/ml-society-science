@@ -39,6 +39,8 @@ import data_generation
 
 ### Importing a LogisticRegression-recommender ###
 import lr_recommender
+import mlp_recommender
+mlp_policy_factory = mlp_recommender.MlpRecommender
 policy_factory = lr_recommender.LogisticRegressionRecommender
 
 def print_test():
@@ -49,13 +51,19 @@ def print_test():
     print("Setting up policy")
     
     policy = policy_factory(2, 2)
+    mlp_policy = mlp_policy_factory(2, 2)
+
     policy.set_reward(default_reward_function)
+    mlp_policy.set_reward(default_reward_function)
 
     ## Fit the policy on historical data first
     print("Fitting historical data to the policy")
     policy.fit_treatment_outcome(features, actions, outcome)
+    mlp_policy.fit_treatment_outcome(features, actions, outcome)
     lr_utility = policy.estimate_utility(features, None, None, policy) / features.shape[0]
+    mlp_utility = mlp_policy.estimate_utility(features, None, None, mlp_policy) / features.shape[0]
     hist_utility = policy.estimate_utility(features, actions, outcome) / features.shape[0]
+    print(mlp_utility)
     print(lr_utility)
     print(hist_utility)
     """
