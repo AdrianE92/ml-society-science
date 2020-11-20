@@ -2,7 +2,7 @@ import numpy as np
 import pandas
 np.random.seed(42)
 def default_reward_function(action, outcome):
-    return -0.1*action + outcome
+    return -0.1*(action!=0) + outcome
 
 def test_policy(generator, policy, reward_function, T):
     print("Testing for ", T, "steps")

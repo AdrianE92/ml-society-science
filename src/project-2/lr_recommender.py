@@ -52,7 +52,7 @@ class LogisticRegressionRecommender:
         print("Fitting treatment outcomes")
 
         # Making a Logistic Regression model
-        self.model = linear_model.LogisticRegression(random_state=0, solver='lbfgs')
+        self.model = linear_model.LogisticRegression(random_state=0, solver='liblinear')
 
         # Scaling data and combining data and actions in a dataframe
         scaled_data = preprocessing.scale(data)
@@ -111,7 +111,7 @@ class LogisticRegressionRecommender:
         (should a numpy.array of size equal to self.n_actions, summing up to 1)
         """
         #print("Recommending")
-        return np.ones(self.n_actions) / self.n_actions;
+        return np.ones(self.n_actions) / self.n_actions
 
 
 
