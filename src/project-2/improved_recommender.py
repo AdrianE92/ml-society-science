@@ -26,7 +26,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 np.random.seed(42)
-class MlpRecommender:
+class ImprovedRecommender:
 
     #################################
     # Initialise
@@ -70,7 +70,8 @@ class MlpRecommender:
         self.scaler.fit(data)
         scaled_data = self.scaler.transform(data)
         
-        self.model = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(5,2), random_state=0, max_iter=2000)
+        
+        self.model = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(5,2), random_state=0)
         fit_data = pd.DataFrame(scaled_data)
         fit_data['a'] = actions
         self.model.fit(fit_data.values, np.ravel(outcome))
