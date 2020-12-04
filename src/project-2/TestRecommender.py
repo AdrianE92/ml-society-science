@@ -8,6 +8,7 @@ def test_policy(generator, policy, reward_function, T):
     print("Testing for ", T, "steps")
     policy.set_reward(reward_function)
     u = 0
+
     for t in range(T):
         x = generator.generate_features()
         a = policy.recommend(x)
@@ -16,7 +17,7 @@ def test_policy(generator, policy, reward_function, T):
         u += r
         policy.observe(x, a, y)
         #print(a)
-        #print("x: ", x, "a: ", a, "y:", y, "r:", r)
+        print("x: ", x, "a: ", a, "y:", y, "r:", r)
     return u/T
 
 features = pandas.read_csv('../../data/medical/historical_X.dat', header=None, sep=" ").values
@@ -31,10 +32,11 @@ import historical_recommender
 # Importing Logistic Regression and Multilayer Perceptron Recommenders
 import lr_recommender
 import mlp_recommender
+import improved_recommender
 historical_factory = historical_recommender.HistoricalRecommender
 lr_factory = lr_recommender.LogisticRegressionRecommender
-mlp_factory = mlp_recommender.MlpRecommender
-
+mlp_factory = improved_recommender.ImprovedRecommender
+#mlp_factory = mlp_recommender.MlpRecommender
 #import reference_recommender
 #policy_factory = reference_recommender.HistoricalRecommender
 
@@ -42,7 +44,8 @@ mlp_factory = mlp_recommender.MlpRecommender
 print("---- Testing with only two treatments ----")
 
 print("Setting up simulator")
-generator = data_generation.DataGenerator()
+generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
+#generator = data_generation.DataGenerator()
 print("Setting up policy")
 """
 historical_policy = historical_factory(len(actions), len(outcome))
@@ -82,6 +85,9 @@ mlp_utility = mlp_policy.estimate_utility(features, None, None, mlp_policy) / fe
 print("MLP Classifier utility: ", mlp_utility)
 print("Logistic Regression utility: ", lr_utility)
 """
+print(generator.get_n_actions())
+x = generator.generate_features()
+print(generator.generate_outcome(x, 3))
 mlp_policy = mlp_factory(generator.get_n_actions(), generator.get_n_outcomes())
 mlp_policy.fit_treatment_outcome(features, actions, outcome)
 
@@ -95,15 +101,6 @@ print("Final analysis of results")
 policy.final_analysis()
 utilities = np.zeros(n_tests)
 
-for i in range(n_tests):
-    print("Starting test", i)
-    policy = mlp_factory(2,2)
-    policy.fit_treatment_outcome(features, actions, outcome)
-    policy.set_reward(default_reward_function)
-    #test = np.random.choice(len(outcome), len(outcome))
-    #test_outcome = outcome[test]
-    #test_action = actions[test]
-    utilities[i] = policy.estimate_utility(features, None, None, policy)
 
 """
 ## 95% Confidence Interval with bootstrapping (Improved Policy)
@@ -149,6 +146,10 @@ print("Total reward:", result)
 print("Final analysis of results")
 policy.final_analysis()
 
+Normal(1 treatment): 0.4533
+Normal(2 treatments): 0.6219
+Observe(1 treatment): 0.4536
+Observe(2 treatments): 0.601
 
 [0.3399925 0.427505 ]
 """

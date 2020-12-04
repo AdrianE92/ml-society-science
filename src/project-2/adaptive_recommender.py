@@ -26,7 +26,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import pandas as pd
 np.random.seed(42)
-class ImprovedRecommender:
+class AdaptiveRecommender:
 
     #################################
     # Initialise
@@ -138,20 +138,16 @@ class ImprovedRecommender:
         scaled_user_data = self.scaler.transform(user_data)
         P_outcomes_placebo = self.predict_proba(scaled_user_data, 0)
         P_outcomes_drug = self.predict_proba(scaled_user_data, 1)
-        P_outcomes_drug_2 = self.predict_proba(scaled_user_data, 2)
 
         # Estimating reward
         E_reward_placebo = P_outcomes_placebo[0,0]*self.reward(0, 0) + P_outcomes_placebo[0,1]*self.reward(0, 1)
         E_reward_drug = P_outcomes_drug[0,0]*self.reward(1, 0)+ P_outcomes_drug[0,1]*self.reward(1, 1)
-        E_reward_drug_2 = P_outcomes_drug_2[0,0]*self.reward(1, 0)+ P_outcomes_drug_2[0,1]*self.reward(1, 1)
 
         # Return the best action
-        if ((E_reward_placebo >= E_reward_drug) and (E_reward_placebo >= E_reward_drug_2)):
+        if (E_reward_placebo >= E_reward_drug):
             return 0
-        elif E_reward_drug >= E_reward_drug_2:
-            return 1
         else:
-            return 2
+            return 1
 
     # Observe the effect of an action. This is an opportunity for you
     # to refit your models, to take the new information into account.
