@@ -12,10 +12,14 @@ def gene_exploration(generator, treatment, T, reward_function=reward_function, e
     for t in range(T):
         x = generator.generate_features()
         a = treatment
-        if x[0][102] == 1 and x[0][44] == 1 and x[0][24] == 1 and x[0][50] == 1 and x[0][23] == 1 and x[0][101] == 1:
-            y = generator.generate_outcome(x, 115)
+        # == 1 and x[0][44] == 1 and x[0][24] == 1 and x[0][50] == 1 and x[0][23] == 1 and x[0][101] == 1:
+
+        if x[0][72] == 1:
+            y = generator.generate_outcome(x, 1)
         else:
             y = generator.generate_outcome(x, a)
+
+        #y = generator.generate_outcome(x, a)
         r = reward_function(a, y)
         if everyone:
             patients.append(x[0])
@@ -81,10 +85,10 @@ if __name__ == "__main__":
     n_patients, most_common_genes = gene_exploration(generator, 2, 10000, everyone=False)
 
     print(n_patients)
-    print(most_common_genes[102])
+    print(most_common_genes[72])
 
 
-
+## Gene = 72, treatment 1. Gene = 55, treatment 1. Gene = 83
 """
 features = pandas.read_csv('data/medical/historical_X.dat', header=None, sep=" ").values
 actions = pandas.read_csv('data/medical/historical_A.dat', header=None, sep=" ").values

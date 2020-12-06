@@ -17,7 +17,7 @@ def test_policy(generator, policy, reward_function, T):
         u += r
         policy.observe(x, a, y)
         #print(a)
-        print("x: ", x, "a: ", a, "y:", y, "r:", r)
+        #print("x: ", x, "a: ", a, "y:", y, "r:", r)
     return u/T
 
 features = pandas.read_csv('../../data/medical/historical_X.dat', header=None, sep=" ").values
@@ -28,8 +28,8 @@ observations = features[:, :128]
 labels = features[:,128] + features[:,129]*2
 
 import data_generation
+# Importing Recommenders
 import historical_recommender
-# Importing Logistic Regression and Multilayer Perceptron Recommenders
 import lr_recommender
 import mlp_recommender
 import improved_recommender
@@ -37,17 +37,13 @@ import adaptive_recommender
 import improved_recommender_big
 import adaptive_recommender_big
 
-adaptive_factory = adaptive_recommender.AdaptiveRecommender
 historical_factory = historical_recommender.HistoricalRecommender
 lr_factory = lr_recommender.LogisticRegressionRecommender
-#mlp_factory = adaptive_recommender_big.AdaptiveRecommenderBig
-
-#mlp_factory = improved_recommender_big.ImprovedRecommenderBig
-mlp_factory = improved_recommender.ImprovedRecommender
-#mlp_factory = mlp_recommender.MlpRecommender
-
-#import reference_recommender
-#policy_factory = reference_recommender.HistoricalRecommender
+mlp_factory = mlp_recommender.MlpRecommender
+improved_factory = improved_recommender.ImprovedRecommender
+adaptive_factory = adaptive_recommender.AdaptiveRecommender
+improved_big_factory = improved_recommender_big.ImprovedRecommenderBig
+adaptive_big_factory = adaptive_recommender_big.AdaptiveRecommenderBig
 
 ## First test with the same number of treatments
 print("---- Testing with only two treatments ----")
@@ -56,6 +52,26 @@ print("Setting up simulator")
 generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
 #generator = data_generation.DataGenerator()
 print("Setting up policy")
+x = generator.generate_features()
+
+#policy = historical_factory(generator.get_n_actions(), generator.get_n_outcomes())
+#policy = lr_factory(generator.get_n_actions(), generator.get_n_outcomes())
+#policy = mlp_factory(generator.get_n_actions(), generator.get_n_outcomes())
+#policy = improved_factory(generator.get_n_actions(), generator.get_n_outcomes())
+#policy = adaptive_factory(generator.get_n_actions(), generator.get_n_outcomes())
+policy = adaptive_big_factory(generator.get_n_actions(), generator.get_n_outcomes())
+
+#policy = improved_big_factory(generator.get_n_actions(), generator.get_n_outcomes())
+
+policy.fit_treatment_outcome(features, actions, outcome)
+print("Running an online test")
+n_tests = 1000
+result = test_policy(generator, policy, default_reward_function, n_tests)
+print("Total reward:", result)
+print("Final analysis of results")
+policy.final_analysis()
+
+## Policies on historical data
 """
 historical_policy = historical_factory(len(actions), len(outcome))
 lr_policy = lr_factory(2, 2)
@@ -94,22 +110,8 @@ mlp_utility = mlp_policy.estimate_utility(features, None, None, mlp_policy) / fe
 print("MLP Classifier utility: ", mlp_utility)
 print("Logistic Regression utility: ", lr_utility)
 """
-print(generator.get_n_actions())
-x = generator.generate_features()
-print(generator.generate_outcome(x, 3))
-mlp_policy = mlp_factory(generator.get_n_actions(), generator.get_n_outcomes())
-mlp_policy.fit_treatment_outcome(features, actions, outcome)
 
-policy = historical_factory(generator.get_n_actions(), generator.get_n_outcomes())
-policy.fit_treatment_outcome(features, actions, outcome)
-print("Running an online test")
-n_tests = 1000
-result = test_policy(generator, mlp_policy, default_reward_function, n_tests)
-print("Total reward:", result)
-print("Final analysis of results")
-policy.final_analysis()
-
-
+## Confidence Intervals
 """
 ## 95% Confidence Interval with bootstrapping (Improved Policy)
 utilities = np.zeros(n_tests)
@@ -134,32 +136,4 @@ for i in range(n_tests):
     policy.fit_treatment_outcome(features, test_action, test_outcome)
     utilities[i] = test_policy(generator, policy, default_reward_function, n_tests)
 print(np.percentile(utilities, [2.5, 97.5]))
-## First test with the same number of treatments
-print("--- Testing with an additional experimental treatment and 126 gene silencing treatments ---")
-print("Setting up simulator")
-#generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
-generator = data_generation.DataGenerator()
-print("Setting up policy")
-policy = historical_factory(generator.get_n_actions(), generator.get_n_outcomes())
-
-## Fit the policy on historical data first
-print("Fitting historical data to the policy")
-policy.fit_treatment_outcome(features, actions, outcome)
-
-## Run an online test with a small number of actions
-print("Running an online test")
-n_tests = 1000
-result = test_policy(generator, policy, default_reward_function, n_tests)
-print("Total reward:", result)
-print("Final analysis of results")
-policy.final_analysis()
-
-Adaptive (1 treatment) 0.4621
-Normal(1 treatment): 0.4533
-Normal(2 treatments): 0.6219
-Observe(1 treatment): 0.4536
-Observe(2 treatments): 0.601
-
-[0.3399925 0.427505 ]
-
 """

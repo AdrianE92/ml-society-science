@@ -134,6 +134,7 @@ class ImprovedRecommenderBig:
     def recommend(self, user_data):
         # Finding the probabilities of outcomes given user_data and action
         #print("recommending")
+        
         scaled_user_data = self.scaler.transform(user_data)
         P_outcomes_placebo = self.predict_proba(scaled_user_data, 0)
         P_outcomes_drug = self.predict_proba(scaled_user_data, 1)

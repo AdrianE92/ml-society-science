@@ -138,7 +138,8 @@ class AdaptiveRecommenderBig:
         P_outcomes_placebo = self.predict_proba(scaled_user_data, 0)
         P_outcomes_drug = self.predict_proba(scaled_user_data, 1)
         P_outcomes = []
-
+        if user_data[0][72] == 1:
+            return 1
         for i in range(2, self.n_actions):
             P_outcomes.append(self.predict_proba(scaled_user_data, i))
        
@@ -154,7 +155,7 @@ class AdaptiveRecommenderBig:
             
         # Return the best action
         best_action = E_rewards.index(max(E_rewards))
-        print(best_action)
+        
         return best_action
 
     # Observe the effect of an action. This is an opportunity for you
