@@ -62,7 +62,6 @@ class HistoricalRecommender:
     ## Here we assume that the outcome is a direct function of data and actions
     ## This model can then be used in estimate_utility(), predict_proba() and recommend()
     def fit_treatment_outcome(self, data, actions, outcome):
-        print("fitting")
         self.data = data
         self.actions = actions
         self.outcome = outcome

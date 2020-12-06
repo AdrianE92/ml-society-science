@@ -20,6 +20,66 @@ def test_policy(generator, policy, reward_function, T):
         #print("x: ", x, "a: ", a, "y:", y, "r:", r)
     return u/T
 
+def final_analysis(policies, features, actions, outcome, generator, big_generator, n_tests):
+    """
+    Policy 0-2: Utility from historical data
+                LogisticRegressionRecommender on historical data
+                MlpRecommender on historical data
+    Policy 3-7: HistoricalRecommender on new patients
+                ImprovedRecommender on new patients
+                ImprovedRecommenderBig on new patients with big matrices
+                AdaptiveRecommender on new patients
+                AdaptiveRecommenderBig on new patients with big matrices
+    """
+    utilities = []
+    for policy in range(len(policies)):
+        if policy == 0:
+            #Utility from historical data
+            #policies[policy].set_reward(default_reward_function)
+            utilities.append(policies[policy].estimate_utility(features, actions, outcome))
+            print("0. Utility for historical data: ", utilities[policy])
+        if policy == 1:
+            #Utility for LR Recommender
+            policies[policy].fit_treatment_outcome(features, actions, outcome)
+            policies[policy].set_reward(default_reward_function)
+            utilities.append(policies[policy].estimate_utility(features, None, None, policies[policy]) / features.shape[0])
+            print("1. Utility for LogisticRegressionRecommender on historical data: ", utilities[policy])
+        if policy == 2:
+            #Utility for MlpRecommender
+            policies[policy].fit_treatment_outcome(features, actions, outcome)
+            policies[policy].set_reward(default_reward_function)
+            utilities.append(policies[policy].estimate_utility(features, None, None, policies[policy]) / features.shape[0])
+            print("2. Utility for MlpRecommender on historical data: ", utilities[policy])
+        if policy == 3:
+            #Utility for HistoricalRecommender on new patients
+            policies[policy].fit_treatment_outcome(features, actions, outcome)
+            utilities.append(test_policy(generator, policies[policy], default_reward_function, n_tests))
+            print("3. Utility for HistoricalRecommender on new patients: ", utilities[policy])
+        if policy == 4:
+            #Utility for ImprovedRecommender on new patients
+            policies[policy].fit_treatment_outcome(features, actions, outcome)
+            utilities.append(test_policy(generator, policies[policy], default_reward_function, n_tests))
+            print("4. Utility for ImprovedRecommender on new patients: ", utilities[policy])
+        if policy == 5:
+            #Utility for ImprovedRecommenderBig on new patients
+            policies[policy].fit_treatment_outcome(features, actions, outcome)
+            utilities.append(test_policy(big_generator, policies[policy], default_reward_function, n_tests))
+            print("5. Utility for ImprovedRecommender on new patients, with additional treatments: ", utilities[policy])
+        if policy == 6:
+            #Utility for AdaptiveRecommender on new patients
+            policies[policy].fit_treatment_outcome(features, actions, outcome)
+            utilities.append(test_policy(generator, policies[policy], default_reward_function, n_tests))
+            print("6. Utility for AdaptiveRecommender on new patients: ", utilities[policy])
+        if policy == 7:
+            #Utility for AdaptiveRecommenderBig on new patients
+            policies[policy].fit_treatment_outcome(features, actions, outcome)
+            utilities.append(test_policy(big_generator, policies[policy], default_reward_function, n_tests))
+            print("7. Utility for AdaptiveRecommender on new patients, with additional treatments: ", utilities[policy])
+    print("The best policy appears to be number ", utilities.index(max(utilities)))
+    print("It yields ", max(utilities) - utilities[0], "more expected utility than the historical policy.")
+    print("This is an increase of ", (max(utilities)/utilities[0])*100, "percent!")
+    return None
+
 features = pandas.read_csv('../../data/medical/historical_X.dat', header=None, sep=" ").values
 actions = pandas.read_csv('../../data/medical/historical_A.dat', header=None, sep=" ").values
 outcome = pandas.read_csv('../../data/medical/historical_Y.dat', header=None, sep=" ").values
@@ -49,34 +109,27 @@ adaptive_big_factory = adaptive_recommender_big.AdaptiveRecommenderBig
 print("---- Testing with only two treatments ----")
 
 print("Setting up simulator")
-generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
+generator = data_generation.DataGenerator()
+big_generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
 #generator = data_generation.DataGenerator()
-print("Setting up policy")
-x = generator.generate_features()
+print("Setting up policies")
+policies = []
+policies.append(historical_factory(len(actions), len(outcome)))
+policies.append(lr_factory(2, 2))
+policies.append(mlp_factory(2, 2))
+policies.append(historical_factory(generator.get_n_actions(), generator.get_n_outcomes()))
+policies.append(improved_factory(generator.get_n_actions(), generator.get_n_outcomes()))
+policies.append(improved_big_factory(big_generator.get_n_actions(), big_generator.get_n_outcomes()))
+policies.append(adaptive_factory(generator.get_n_actions(), generator.get_n_outcomes()))
+policies.append(adaptive_big_factory(big_generator.get_n_actions(), big_generator.get_n_outcomes()))
 
-#policy = historical_factory(generator.get_n_actions(), generator.get_n_outcomes())
-#policy = lr_factory(generator.get_n_actions(), generator.get_n_outcomes())
-#policy = mlp_factory(generator.get_n_actions(), generator.get_n_outcomes())
-#policy = improved_factory(generator.get_n_actions(), generator.get_n_outcomes())
-#policy = adaptive_factory(generator.get_n_actions(), generator.get_n_outcomes())
-policy = adaptive_big_factory(generator.get_n_actions(), generator.get_n_outcomes())
 
-#policy = improved_big_factory(generator.get_n_actions(), generator.get_n_outcomes())
-
-policy.fit_treatment_outcome(features, actions, outcome)
-print("Running an online test")
 n_tests = 1000
-result = test_policy(generator, policy, default_reward_function, n_tests)
-print("Total reward:", result)
-print("Final analysis of results")
-policy.final_analysis()
+
+final_analysis(policies, features, actions, outcome, generator, big_generator, n_tests)
 
 ## Policies on historical data
 """
-historical_policy = historical_factory(len(actions), len(outcome))
-lr_policy = lr_factory(2, 2)
-mlp_policy = mlp_factory(2, 2)
-
 #Set rewards
 lr_policy.set_reward(default_reward_function)
 mlp_policy.set_reward(default_reward_function)
@@ -87,8 +140,7 @@ print("Fitting historical data to the policy")
 lr_policy.fit_treatment_outcome(features, actions, outcome)
 mlp_policy.fit_treatment_outcome(features, actions, outcome)
 
-print("Calculating utility for historical data")
-hist_utility = historical_policy.estimate_utility(features, actions, outcome)
+
 ## Run an online test with a small number of actions
 
 print("Utility of historical data: ", hist_utility)
@@ -105,8 +157,7 @@ for i in range(n_data):
 
 print("95 percent confidence interval for historical data: ", np.percentile(utilities, [2.5, 97.5]))
 print("Calculating utility for improved policies")
-lr_utility = lr_policy.estimate_utility(features, None, None, lr_policy) / features.shape[0]
-mlp_utility = mlp_policy.estimate_utility(features, None, None, mlp_policy) / features.shape[0]
+
 print("MLP Classifier utility: ", mlp_utility)
 print("Logistic Regression utility: ", lr_utility)
 """

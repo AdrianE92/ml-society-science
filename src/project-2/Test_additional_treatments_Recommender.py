@@ -13,13 +13,13 @@ def gene_exploration(generator, treatment, T, reward_function=reward_function, e
         x = generator.generate_features()
         a = treatment
         # == 1 and x[0][44] == 1 and x[0][24] == 1 and x[0][50] == 1 and x[0][23] == 1 and x[0][101] == 1:
-
+        """
         if x[0][72] == 1:
             y = generator.generate_outcome(x, 1)
         else:
             y = generator.generate_outcome(x, a)
-
-        #y = generator.generate_outcome(x, a)
+        """
+        y = generator.generate_outcome(x, a)
         r = reward_function(a, y)
         if everyone:
             patients.append(x[0])
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     print("Thompson (500 000): utility = %f" %result[0])
     """
-    n_patients, most_common_genes = gene_exploration(generator, 2, 10000, everyone=False)
+    n_patients, most_common_genes = gene_exploration(generator, 2, 100000, everyone=False)
 
     print(n_patients)
     print(most_common_genes[72])
