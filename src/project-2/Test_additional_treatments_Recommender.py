@@ -67,11 +67,6 @@ if __name__ == "__main__":
     policy = thompson_bandit.ThompsonBandit(129, 2, prior_a, prior_b)
     generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
     """
-    result = test_policy_additional(generator, policy, 10000)
-    b = np.argsort(-result[2])
-    for first in b:
-        print("Treatment ", first, "used in patients ", result[2][first], " number of times. ")
-
     T = 100000
     result = test_policy_additional(generator, policy, T)
  
@@ -80,7 +75,7 @@ if __name__ == "__main__":
         print("Treatment ", first, "used in patients ", result[2][first], " number of times. ")
    
 
-    print("Thompson (500 000): utility = %f" %result[0])
+    print("Utility: %f" %result[0])
     """
     n_patients, most_common_genes = gene_exploration(generator, 2, 100000, everyone=False)
 
