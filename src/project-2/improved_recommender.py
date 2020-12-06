@@ -82,7 +82,6 @@ class ImprovedRecommender:
         fit_data = pd.DataFrame(self.data)
         fit_data['a'] = self.actions
         self.model.fit(fit_data.values, np.ravel(self.outcome))
-        #print("fit?")
         return None
 
     ## Estimate the utility of a specific policy from historical data (data, actions, outcome),
@@ -121,7 +120,6 @@ class ImprovedRecommender:
     def predict_proba(self, data, treatment):
         df = pd.DataFrame(data)
         df['a'] = treatment
-        print(df['a'])
         return self.model.predict_proba(df)
 
     # Return a distribution of recommendations for a specific user datum
@@ -139,15 +137,17 @@ class ImprovedRecommender:
         scaled_user_data = self.scaler.transform(user_data)
         P_outcomes_placebo = self.predict_proba(scaled_user_data, 0)
         P_outcomes_drug = self.predict_proba(scaled_user_data, 1)
-        #P_outcomes_drug_2 = self.predict_proba(scaled_user_data, 2)
+        P_outcomes_drug_2 = self.predict_proba(scaled_user_data, 2)
+        """
         P_outcomes = []
         for i in range(2, 128):
             P_outcomes.append(self.predict_proba(scaled_user_data, i))
-            print(P_outcomes[i-2])
+        """   
         # Estimating reward
         E_reward_placebo = P_outcomes_placebo[0,0]*self.reward(0, 0) + P_outcomes_placebo[0,1]*self.reward(0, 1)
         E_reward_drug = P_outcomes_drug[0,0]*self.reward(1, 0)+ P_outcomes_drug[0,1]*self.reward(1, 1)
         #E_reward_drug_2 = P_outcomes_drug_2[0,0]*self.reward(1, 0)+ P_outcomes_drug_2[0,1]*self.reward(1, 1)
+        """
         E_rewards = []
         E_rewards.append(E_reward_placebo)
         E_rewards.append(E_reward_drug)
@@ -158,7 +158,6 @@ class ImprovedRecommender:
         best_action = E_rewards.index(max(E_rewards))
         print(best_action)
         return best_action
-        """
         if ((E_reward_placebo >= E_reward_drug) and (E_reward_placebo >= E_reward_drug_2)):
             return 0
         elif E_reward_drug >= E_reward_drug_2:
@@ -166,13 +165,18 @@ class ImprovedRecommender:
         else:
             return 2
         """
+        if (E_reward_placebo >= E_reward_drug):
+            return 0
+        else:
+            return 1
     # Observe the effect of an action. This is an opportunity for you
     # to refit your models, to take the new information into account.
     def observe(self, user, action, outcome):
-        data = user.reshape(1,130)
-        data = self.scaler.transform(data)
-        self.fit_treatment_outcome(data, action, outcome)
+        #data = user.reshape(1,130)
+        #data = self.scaler.transform(data)
+        #self.fit_treatment_outcome(data, action, outcome)
         return None
+
 
     # After all the data has been obtained, do a final analysis. This can consist of a number of things:
     # 1. Recommending a specific fixed treatment policy

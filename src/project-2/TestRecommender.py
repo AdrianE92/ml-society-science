@@ -11,13 +11,14 @@ def test_policy(generator, policy, reward_function, T):
 
     for t in range(T):
         x = generator.generate_features()
-        a = policy.recommend(x)
+        #a = policy.recommend(x)
+        a = 20
         y = generator.generate_outcome(x, a)
         r = reward_function(a, y)
         u += r
         policy.observe(x, a, y)
         #print(a)
-        #print("x: ", x, "a: ", a, "y:", y, "r:", r)
+        print("x: ", x, "a: ", a, "y:", y, "r:", r)
     return u/T
 
 features = pandas.read_csv('../../data/medical/historical_X.dat', header=None, sep=" ").values
@@ -33,10 +34,19 @@ import historical_recommender
 import lr_recommender
 import mlp_recommender
 import improved_recommender
+import adaptive_recommender
+import improved_recommender_big
+import adaptive_recommender_big
+
+adaptive_factory = adaptive_recommender.AdaptiveRecommender
 historical_factory = historical_recommender.HistoricalRecommender
 lr_factory = lr_recommender.LogisticRegressionRecommender
+#mlp_factory = adaptive_recommender_big.AdaptiveRecommenderBig
+
+#mlp_factory = improved_recommender_big.ImprovedRecommenderBig
 mlp_factory = improved_recommender.ImprovedRecommender
 #mlp_factory = mlp_recommender.MlpRecommender
+
 #import reference_recommender
 #policy_factory = reference_recommender.HistoricalRecommender
 
@@ -99,7 +109,6 @@ result = test_policy(generator, mlp_policy, default_reward_function, n_tests)
 print("Total reward:", result)
 print("Final analysis of results")
 policy.final_analysis()
-utilities = np.zeros(n_tests)
 
 
 """
@@ -146,10 +155,12 @@ print("Total reward:", result)
 print("Final analysis of results")
 policy.final_analysis()
 
+Adaptive (1 treatment) 0.4621
 Normal(1 treatment): 0.4533
 Normal(2 treatments): 0.6219
 Observe(1 treatment): 0.4536
 Observe(2 treatments): 0.601
 
 [0.3399925 0.427505 ]
+
 """
