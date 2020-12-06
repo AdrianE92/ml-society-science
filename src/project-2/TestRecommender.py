@@ -11,8 +11,7 @@ def test_policy(generator, policy, reward_function, T):
 
     for t in range(T):
         x = generator.generate_features()
-        #a = policy.recommend(x)
-        a = 20
+        a = policy.recommend(x)
         y = generator.generate_outcome(x, a)
         r = reward_function(a, y)
         u += r

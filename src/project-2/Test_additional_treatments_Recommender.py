@@ -3,9 +3,37 @@ import pandas
 
 import thompson_bandit
 import data_generation
-
+np.random.seed(42)
 def reward_function(action, outcome):
-    return -0.1 * action + outcome
+    return -0.1 * (action!=0) + outcome
+
+def gene_exploration(generator, treatment, T, reward_function=reward_function, everyone=False):
+    patients = []
+    for t in range(T):
+        x = generator.generate_features()
+        a = treatment
+        if x[0][102] == 1 and x[0][44] == 1 and x[0][24] == 1 and x[0][50] == 1 and x[0][23] == 1 and x[0][101] == 1:
+            y = generator.generate_outcome(x, 115)
+        else:
+            y = generator.generate_outcome(x, a)
+        r = reward_function(a, y)
+        if everyone:
+            patients.append(x[0])
+        else:
+            if r > 0:
+                patients.append(x[0])
+    genes = []
+    for patient in patients:
+        genes.append(np.where(patient == 1))
+    most_common_genes = {}
+    for i in genes:
+        for j in i[0]:
+            if j in most_common_genes:
+                most_common_genes[j] += 1
+            else:
+                most_common_genes[j] = 0
+    most_common_genes = {key: value for key, value in sorted(most_common_genes.items(), key=lambda item: item[1], reverse=True)}
+    return len(patients), most_common_genes
 
 def test_policy_additional(generator, policy,  T, reward_function=reward_function):
     print("Additional treatments testing for ", T, "steps")
@@ -34,13 +62,13 @@ if __name__ == "__main__":
     prior_b = 1
     policy = thompson_bandit.ThompsonBandit(129, 2, prior_a, prior_b)
     generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
-    result = test_policy_additional(generator, policy, 1000)
-   
+    """
+    result = test_policy_additional(generator, policy, 10000)
     b = np.argsort(-result[2])
     for first in b:
         print("Treatment ", first, "used in patients ", result[2][first], " number of times. ")
 
-    T = 500000
+    T = 100000
     result = test_policy_additional(generator, policy, T)
  
     b = np.argsort(-result[2])
@@ -49,7 +77,11 @@ if __name__ == "__main__":
    
 
     print("Thompson (500 000): utility = %f" %result[0])
+    """
+    n_patients, most_common_genes = gene_exploration(generator, 2, 10000, everyone=False)
 
+    print(n_patients)
+    print(most_common_genes[102])
 
 
 
@@ -100,8 +132,4 @@ result = test_policy(generator, policy, default_reward_function, n_tests)
 print("Total reward:", result)
 print("Final analysis of results")
 policy.final_analysis()
-
 """
-
-
-
