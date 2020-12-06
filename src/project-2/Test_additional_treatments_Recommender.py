@@ -30,33 +30,25 @@ def test_policy_additional(generator, policy,  T, reward_function=reward_functio
     return [u/T, not_placebo, actioncount]
 
 if __name__ == "__main__":
-    prior_a = [2,2] + [1]*127
-    prior_b = [5,2] + [1]*127
+    prior_a = 1
+    prior_b = 1
     policy = thompson_bandit.ThompsonBandit(129, 2, prior_a, prior_b)
     generator = data_generation.DataGenerator(matrices="./big_generating_matrices.mat")
-    result1 = test_policy_additional(generator, policy, 1000)
+    result = test_policy_additional(generator, policy, 1000)
    
-    #print("10 most used treatments:")
-    b = np.argsort(-result1[2])
-    print("Treatment ", b, "used in patients ", result[2][b], " number of times. ")
-    #print("Treatment:  %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d" % (b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9]))
-    #r = result1[2][b]
-    #print("Times used: %5d %5d %5d %5d %5d %5d %5d %5d %5d %5d" % (r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]))
-
+    b = np.argsort(-result[2])
+    for first in b:
+        print("Treatment ", first, "used in patients ", result[2][first], " number of times. ")
 
     T = 500000
-    #policy = thompson_bandit.ThompsonBandit(129, 2, prior_a, prior_b)
-    result2 = test_policy_additional(generator, policy, T)
-    #print("10 most used treatments:")
-    b = np.argsort(-result2[2])
-    print("Treatment ", b, "used in patients ", result[2][b], " number of times. ")
-    #print("Treatment:  %6d %6d %5d %5d %5d %5d %5d %5d %5d %5d" % (b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9]))
-    #r = result1[2][b]
-    #print("Times used: %6d %6d %5d %5d %5d %5d %5d %5d %5d %5d" % (r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9]))
+    result = test_policy_additional(generator, policy, T)
+ 
+    b = np.argsort(-result[2])
+    for first in b:
+        print("Treatment ", first, "used in patients ", result[2][first], " number of times. ")
+   
 
-
-    print("\nThompson  (20 000): utility = %f" %result1[0])
-    print("Thompson (200 000): utility = %f" %result2[0])
+    print("Thompson (500 000): utility = %f" %result[0])
 
 
 
